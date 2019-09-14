@@ -3,14 +3,30 @@
 #include<opencv2/highgui/highgui.hpp>
 #include<opencv2/imgproc.hpp>
 
+#include "Histogram1D.h"
+
 using namespace std;
-using namespace cv;
 
 int main() {
 
-	Mat image = imread("GS.jpg");
-	imshow("Image", image);
+	cv::Mat image = cv::imread("GS.jpg", 0); // read in black and white
+	//imshow("Image", image);
 
-	waitKey(0);
+	if (image.empty()) {
+		cout << "Empty image" << endl;
+		return 0;
+	}
+
+	Histogram1D h;
+
+	cv::Mat histo = h.getHistogram(image);
+
+	// Loop over each bin
+	for (int i = 0; i < 256; i++) {
+		cout << "Value " << i << "=" << histo.at<float>(i) << endl;
+	}
+
+	cv::waitKey(0);
+	system("PAUSE");
 	return 0;
 }
