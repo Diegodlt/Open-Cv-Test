@@ -76,3 +76,13 @@ cv::Mat Histogram1D::getImageOfHistogram(const cv::Mat &hist, int zoom) {
 
 	return histImg;
 }
+
+cv::Mat Histogram1D::applyLookUp(const cv::Mat &image, const cv::Mat &lookup) {
+	// The ouput image
+	cv::Mat result;
+
+	// Apply lookup table
+	cv::LUT(image, lookup, result);
+
+	return result;
+}
