@@ -16,5 +16,7 @@ public:
 		// Prepare default arguments for 1D histogram
 		Histogram1D();
 		cv::Mat getHistogram(const cv::Mat &image);
+		cv::Mat getHistorgramImage(const cv::Mat & image, int zoom);
+		cv::Mat getImageOfHistogram(const cv::Mat & hist, int zoom);
 };
 

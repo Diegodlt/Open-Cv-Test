@@ -21,7 +21,7 @@ cv::Mat Histogram1D::getHistogram(const cv::Mat &image)
 
 	cv::Mat hist;
 
-	//Comput histogram
+	// Compute histogram
 	cv::calcHist(
 		&image,
 		1, // histogram of 1 image only
@@ -33,4 +33,46 @@ cv::Mat Histogram1D::getHistogram(const cv::Mat &image)
 		ranges // pixel value range
 	);
 	return hist;
+}
+
+// Computes the 1D histogram and returns an image of it
+cv::Mat Histogram1D::getHistorgramImage(const cv::Mat &image, int zoom = 1) {
+	// Compute histogram first
+	cv::Mat hist = getHistogram(image);
+
+	// Creates image
+	return getImageOfHistogram(hist, zoom);
+}
+
+cv::Mat Histogram1D::getImageOfHistogram(const cv::Mat &hist, int zoom) {
+	// Get min and max bin values
+	double maxVal = 0;
+	double minVal = 0;
+	cv::minMaxLoc(hist, &minVal, &maxVal, 0, 0);
+
+	// Get histogram size
+	int histSize = hist.rows;
+
+	// Square image on which to display histogram
+	cv::Mat histImg(histSize*zoom, histSize*zoom, CV_8U, cv::Scalar(255));
+
+	// Set the highest point at 90% of nbins
+	int hpt = static_cast<int>(0.9*histSize);
+
+	for (int h = 0; h < histSize; h++) {
+		float binVal = hist.at<float>(h);
+		if (binVal > 0) {
+			int intensity = static_cast<int>(binVal*hpt / maxVal);
+			cv::line(
+				histImg, 
+				cv::Point(h*zoom, histSize*zoom), 
+				cv::Point(h*zoom, (histSize - intensity)*zoom), 
+				cv::Scalar(0), 
+				zoom
+			);
+
+		}
+	}
+
+	return histImg;
 }

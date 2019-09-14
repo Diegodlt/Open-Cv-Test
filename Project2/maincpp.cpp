@@ -9,8 +9,8 @@ using namespace std;
 
 int main() {
 
-	cv::Mat image = cv::imread("GS.jpg", 0); // read in black and white
-	//imshow("Image", image);
+	cv::Mat image = cv::imread("einstein.jpg", 0); // read in black and white
+	imshow("Image", image);
 
 	if (image.empty()) {
 		cout << "Empty image" << endl;
@@ -18,6 +18,9 @@ int main() {
 	}
 
 	Histogram1D h;
+
+	cv::namedWindow("Histogram");
+	cv::imshow("Histogram", h.getHistorgramImage(image, 2));
 
 	cv::Mat histo = h.getHistogram(image);
 
