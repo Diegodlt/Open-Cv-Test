@@ -9,80 +9,83 @@ using namespace std;
 using namespace cv;
 
 const int sliderMaxBrightness = 200;
-const int sliderMaxContrast = 40;
-int sliderBrightness;
-int sliderContrast = 10;
-double contrast = 0;
-double brightness = 0;
-cv::Mat image;
-cv::Mat dest;
+const int sliderMaxContrast = 400;
+int sliderBrightness = 0;
+int sliderContrast = 100;
+double contrast = 1.0;
+double brightness;
 Histogram1D h;
 
 static void on_trackbarContrast(int, void*) {
 	
-	contrast = (double)sliderContrast/10;
-	cout << "Contrast " << contrast << endl;
-	cv::Mat newImage = cv::Mat::zeros(image.size(), image.type());
+	contrast = (double)sliderContrast/100;
 
-	for (int y = 0; y < newImage.rows; y++) {
-		for (int x = 0; x < newImage.cols; x++) {
-			for (int c = 0; c < newImage.channels(); c++) {
-				newImage.at<Vec3b>(y, x)[c] = saturate_cast<uchar>(contrast*image.at<Vec3b>(y, x)[c] + brightness);
-			}
-		}
-	}
-
-	cv::Mat histo = h.getHistogram(newImage);
-	imshow("Histogram", h.getHistorgramImage(newImage, 2));
-	imshow("Image", newImage);
 }
 
 static void on_trackbarBrightness(int, void*) {
 
 	brightness = (double)sliderBrightness;
-	cv::Mat newImage = cv::Mat::zeros(image.size(), image.type());
-
-	for (int y = 0; y < newImage.rows; y++) {
-		for (int x = 0; x < newImage.cols; x++) {
-			for (int c = 0; c < newImage.channels(); c++) {
-				newImage.at<Vec3b>(y, x)[c] = saturate_cast<uchar>(contrast*image.at<Vec3b>(y, x)[c] + brightness);
-			}
-		}
-	}
-
-	cv::Mat histo = h.getHistogram(newImage); 
-	imshow("Histogram", h.getHistorgramImage(newImage, 2));
-	imshow("Image", newImage);
+	
 }
 
 int main() {
 
-	//Histogram1D h;
+	cv::VideoCapture cap("barriers.avi");
 
-	image = cv::imread("einstein.jpg"); 
-	if (image.empty()) {
-		cout << "Empty image" << endl;
-		return 0;
+	// Check if camera opened successfully
+	if (!cap.isOpened()) {
+		cout << "Error opening video stream or file" << endl;
+		return -1;
 	}
-	cv::Mat histo = h.getHistogram(image);
 
-	cv::imshow("Image", image);
+	while (1) {
 
-	cv::namedWindow("Histogram");
-	cv::imshow("Histogram", h.getHistorgramImage(image, 2));
+		cv::Mat frame;
+		// Capture frame-by-frame
+		cap >> frame;
 
+		// If the frame is empty, break immediately
+		if (frame.empty())
+			break;
 
-	char TrackbarOne[50];
-	sprintf_s(TrackbarOne, "Contrast");
-	cv::createTrackbar(TrackbarOne, "Image", &sliderContrast, sliderMaxContrast, on_trackbarContrast);
+		cv::Mat newImage = cv::Mat::zeros(frame.size(), frame.type());
 
-	char TrackbarTwo[50];
-	sprintf_s(TrackbarTwo, "Brightness");
-	cv::createTrackbar(TrackbarTwo, "Image", &sliderBrightness, sliderMaxBrightness, on_trackbarBrightness);
+		for (int y = 0; y < newImage.rows; y++) {
+			for (int x = 0; x < newImage.cols; x++) {
+				for (int c = 0; c < newImage.channels(); c++) {
+					newImage.at<Vec3b>(y, x)[c] = saturate_cast<uchar>(contrast*frame.at<Vec3b>(y, x)[c] + brightness);
+				}
+			}
+		}
 
+		char TrackbarOne[50];
+		sprintf_s(TrackbarOne, "Contrast");
+		cv::createTrackbar(TrackbarOne, "Image", &sliderContrast, sliderMaxContrast, on_trackbarContrast);
+
+		char TrackbarTwo[50];
+		sprintf_s(TrackbarTwo, "Brightness");
+		cv::createTrackbar(TrackbarTwo, "Image", &sliderBrightness, sliderMaxBrightness, on_trackbarBrightness);
+
+		cv::Mat histo = h.getHistogram(newImage);
+		imshow("Histogram", h.getHistorgramImage(newImage, 2));
+
+		// Display the resulting frame
+		cv::imshow("Image", newImage);
+		cv::imshow("Video", frame);
+
+		// Press  ESC on keyboard to exit
+		char c = (char)waitKey(25);
+		if (c == 27)
+			break;
+	}
+
+	// When everything done, release the video capture object
+	cap.release();
+
+	// Closes all the frames
+	destroyAllWindows();
 
 	cv::waitKey(0);
-	system("PAUSE");
 	return 0;
 }
 
