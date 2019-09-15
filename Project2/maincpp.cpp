@@ -9,13 +9,20 @@
 using namespace std;
 using namespace cv;
 
-const int sliderMaxBrightness = 200;
+const int sliderMaxBrightness = 300;
 const int sliderMaxContrast = 400;
-int sliderBrightness = 0;
+int sliderBrightness = 150;
 int sliderContrast = 100;
 double contrast = 1.0;
-double brightness;
+double brightness = 0;
 Histogram1D h;
+
+cv::Mat3b canvas;
+string buttonText = "Save";
+string winName = "Controls";
+cv::Rect button;
+
+bool saveVideo = false;
 
 static void on_trackbarContrast(int, void*) {
 	
@@ -25,13 +32,59 @@ static void on_trackbarContrast(int, void*) {
 
 static void on_trackbarBrightness(int, void*) {
 
-	brightness = (double)sliderBrightness;
+	brightness = (double)sliderBrightness - 150;
 	
+}
+
+void callBackFunc(int event, int x, int y, int flags, void* userdata)
+{
+	if (event == EVENT_LBUTTONDOWN)
+	{
+		if (button.contains(Point(x, y)))
+		{
+			cout << "Screen will close at the end of video" << endl;
+			saveVideo = true;
+			rectangle(canvas(button), button, Scalar(0, 0, 255), 2);
+		}
+	}
+	if (event == EVENT_LBUTTONUP)
+	{
+		rectangle(canvas, button, Scalar(200, 200, 200), 2);
+	}
+
+	imshow(winName, canvas);
+	waitKey(1);
 }
 
 int main() {
 
+	// An image
+	Mat3b img(50, 300, Vec3b(0, 0, 0));
+
+	// Your button
+	button = Rect(0, 0, img.cols, 50);
+
+	// The canvas
+	canvas = Mat3b(img.rows + button.height, img.cols, Vec3b(0, 0, 0));
+
+	// Draw the button
+	canvas(button) = Vec3b(200, 200, 200);
+	putText(canvas(button), buttonText, Point(button.width*0.35, button.height*0.7), FONT_HERSHEY_PLAIN, 1, Scalar(0, 0, 0));
+
+	// Draw the image
+	img.copyTo(canvas(Rect(0, button.height, img.cols, img.rows)));
+
+	// Setup callback function
+	namedWindow(winName);
+	setMouseCallback(winName, callBackFunc);
+
+	imshow(winName, canvas);
+
 	while (1) {
+
+		if (saveVideo) {
+			break;
+		}
 		cv::VideoCapture inputVideo("barriers.avi");
 		// Check if camera opened successfully
 		if (!inputVideo.isOpened()) {
@@ -53,8 +106,6 @@ int main() {
 			cout << "Could not open the output video for write" << endl;
 			return -1;
 		}
-
-		cout << "Input frame resolution: Width=" << S.width << "  Height=" << S.height << " of nr#: " << inputVideo.get(CAP_PROP_FRAME_COUNT) << endl;
 
 		while (1) {
 
@@ -101,6 +152,7 @@ int main() {
 
 		// When everything done, release the video inputVideoture object
 		inputVideo.release();
+
 	}
 
 	// Closes all the frames
